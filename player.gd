@@ -2,14 +2,14 @@ class_name Player extends CharacterBody3D
 
 const MAX_CAMERA_ANGLE: float = PI/2
 
-signal break_pressed(camera_pos: Vector3, camera_dir: Vector3)
-signal place_pressed(camera_pos: Vector3, camera_dir: Vector3)
-
 @export_range(1, 35, 1) var speed: float = 10 # m/s
 @export_range(10, 400, 1) var acceleration: float = 100 # m/s^2
 
 @export_range(0.1, 50., 0.1) var jump_height: float = 1 # m
 @export_range(0.1, 3.0, 0.1, "or_greater") var camera_sens: float = 1
+
+signal break_pressed(camera_pos: Vector3, camera_look_dir: Vector3)
+signal place_pressed(camera_pos: Vector3, camera_look_dir: Vector3)
 
 var jumping: bool = false
 var mouse_captured: bool = false
@@ -19,8 +19,8 @@ var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
 var move_dir: Vector2 # Input direction for movement
 var look_dir: Vector2 # Input direction for look/aim
 
-var walk_vel: Vector3 # Walking velocity 
-var grav_vel: Vector3 # Gravity velocity 
+var walk_vel: Vector3 # Walking velocity
+var grav_vel: Vector3 # Gravity velocity
 var jump_vel: Vector3 # Jumping velocity
 
 @onready var camera: Camera3D = $Camera
@@ -36,12 +36,11 @@ func _unhandled_input(event: InputEvent) -> void:
 		if mouse_captured: release_mouse()
 		else: capture_mouse()
 	if Input.is_action_just_pressed(&"exit"): get_tree().quit()
-	
-	var center_pos: Vector2 = get_viewport().get_window().size / 2.
-	if event.is_action_pressed(&"break"):
-		break_pressed.emit(camera.project_ray_origin(center_pos), camera.project_ray_normal(center_pos))
-	if event.is_action_pressed(&"place"):
-		place_pressed.emit(camera.project_ray_origin(center_pos), camera.project_ray_normal(center_pos))
+
+	var camera_pos: Vector3 = camera.project_ray_origin(get_viewport().get_window().size/2.)
+	var camera_dir: Vector3 = camera.project_ray_normal(get_viewport().get_window().size/2.)
+	if event.is_action_pressed(&"break"): break_pressed.emit(camera_pos, camera_dir)
+	if event.is_action_pressed(&"place"): place_pressed.emit(camera_pos, camera_dir)
 
 func _physics_process(delta: float) -> void:
 	if Input.is_action_just_pressed(&"jump"): jumping = true
@@ -66,7 +65,7 @@ func _rotate_camera(sens_mod: float = 1.0) -> void:
 
 func _handle_joypad_camera_rotation(delta: float, sens_mod: float = 1.0) -> void:
 	var joypad_dir: Vector2 = Input.get_vector(&"look_left", &"look_right", &"look_up", &"look_down")
-	
+
 	if joypad_dir.length() > 0:
 		look_dir += joypad_dir * delta
 		_rotate_camera(sens_mod)
