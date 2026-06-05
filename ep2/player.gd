@@ -1,0 +1,107 @@
+class_name Player extends CharacterBody3D
+
+const MAX_CAMERA_ANGLE: float = PI/2
+
+@export_range(1, 35, 1) var speed: float = 10 # m/s
+@export_range(10, 400, 1) var acceleration: float = 100 # m/s^2
+
+@export_range(0.1, 50., 0.1) var jump_height: float = 1 # m
+@export_range(0.1, 3.0, 0.1, "or_greater") var camera_sens: float = 1
+
+signal break_pressed(camera_pos: Vector3, camera_look_dir: Vector3)
+signal place_pressed(camera_pos: Vector3, camera_look_dir: Vector3, block_id: Blocks.ID)
+signal hover_requested(camera_pos: Vector3, camera_look_dir: Vector3, block_id: Blocks.ID)
+
+var jumping: bool = false
+var mouse_captured: bool = false
+
+var gravity: float = ProjectSettings.get_setting("physics/3d/default_gravity")
+
+var move_dir: Vector2 # Input direction for movement
+var look_dir: Vector2 # Input direction for look/aim
+
+var walk_vel: Vector3 # Walking velocity
+var grav_vel: Vector3 # Gravity velocity
+var jump_vel: Vector3 # Jumping velocity
+
+var selected_block: Blocks.ID = Blocks.ID.COBBLESTONE:
+	set(value):
+		selected_block = value
+		selected_label.text = Blocks.id_to_name(selected_block)
+
+@onready var camera: Camera3D = $Camera
+@onready var selected_label: Label = $UILayer/SelectedLabel
+
+func _ready() -> void:
+	capture_mouse()
+
+func _unhandled_input(event: InputEvent) -> void:
+	if event is InputEventMouseMotion:
+		look_dir = event.relative * 0.001
+		if mouse_captured: _rotate_camera()
+	if event.is_action_pressed(&"toggle_mouse_capture"):
+		if mouse_captured: release_mouse()
+		else: capture_mouse()
+	if Input.is_action_just_pressed(&"exit"): get_tree().quit()
+
+	var camera_pos: Vector3 = camera.project_ray_origin(get_viewport().get_window().size/2.)
+	var camera_dir: Vector3 = camera.project_ray_normal(get_viewport().get_window().size/2.)
+	if event.is_action_pressed(&"break"): break_pressed.emit(camera_pos, camera_dir)
+	if event.is_action_pressed(&"place"): place_pressed.emit(camera_pos, camera_dir, selected_block)
+	
+	if event.is_action_pressed(&"item_next"):
+		selected_block = mini(selected_block+1, Blocks.ID.ID_MAX-1)
+	
+	if event.is_action_pressed(&"item_prev"):
+		selected_block = maxi(selected_block-1, Blocks.ID.AIR+1)
+
+func _physics_process(delta: float) -> void:
+	if Input.is_action_just_pressed(&"jump"): jumping = true
+	#if mouse_captured: _handle_joypad_camera_rotation(delta)
+	var camera_pos: Vector3 = camera.project_ray_origin(get_viewport().get_window().size/2.)
+	var camera_dir: Vector3 = camera.project_ray_normal(get_viewport().get_window().size/2.)
+	hover_requested.emit(camera_pos, camera_dir, selected_block)
+	velocity = _walk(delta) + _gravity(delta) + _jump(delta)
+	move_and_slide()
+
+func capture_mouse() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
+	mouse_captured = true
+
+func release_mouse() -> void:
+	Input.set_mouse_mode(Input.MOUSE_MODE_VISIBLE)
+	mouse_captured = false
+
+func _rotate_camera(sens_mod: float = 1.0) -> void:
+	camera.rotation.y -= look_dir.x * camera_sens * sens_mod
+	camera.rotation.x = clamp(
+		camera.rotation.x - look_dir.y * camera_sens * sens_mod,
+		-MAX_CAMERA_ANGLE, MAX_CAMERA_ANGLE
+	)
+
+func _handle_joypad_camera_rotation(delta: float, sens_mod: float = 1.0) -> void:
+	var joypad_dir: Vector2 = Input.get_vector(&"look_left", &"look_right", &"look_up", &"look_down")
+
+	if joypad_dir.length() > 0:
+		look_dir += joypad_dir * delta
+		_rotate_camera(sens_mod)
+		look_dir = Vector2.ZERO
+
+func _walk(delta: float) -> Vector3:
+	move_dir = Input.get_vector(&"move_left", &"move_right", &"move_forward", &"move_backwards")
+	var _forward: Vector3 = camera.global_transform.basis * Vector3(move_dir.x, 0, move_dir.y)
+	var walk_dir: Vector3 = Vector3(_forward.x, 0, _forward.z).normalized()
+	walk_vel = walk_vel.move_toward(walk_dir * speed * move_dir.length(), acceleration * delta)
+	return walk_vel
+
+func _gravity(delta: float) -> Vector3:
+	grav_vel = Vector3.ZERO if is_on_floor() else grav_vel.move_toward(Vector3(0, velocity.y - gravity, 0), gravity * delta)
+	return grav_vel
+
+func _jump(delta: float) -> Vector3:
+	if jumping:
+		if is_on_floor(): jump_vel = Vector3(0, sqrt(4 * jump_height * gravity), 0)
+		jumping = false
+		return jump_vel
+	jump_vel = Vector3.ZERO if is_on_floor() or is_on_ceiling_only() else jump_vel.move_toward(Vector3.ZERO, gravity * delta)
+	return jump_vel

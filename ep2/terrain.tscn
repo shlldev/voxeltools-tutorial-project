@@ -1,0 +1,171 @@
+[gd_scene format=3 uid="uid://dgc25gasbuarp"]
+
+[ext_resource type="Script" uid="uid://bpvbw5shcm7ps" path="res://Resources/terrain_layer.gd" id="1_h2lqh"]
+[ext_resource type="Texture2D" uid="uid://cgrqcbbebdioe" path="res://Sprites/Cobblestone.png" id="1_iqhxt"]
+[ext_resource type="PackedScene" uid="uid://btgnsbsnwtwdf" path="res://player.tscn" id="2_0u6kl"]
+[ext_resource type="Script" uid="uid://n25af285g4g7" path="res://terrain.gd" id="2_avahw"]
+[ext_resource type="Texture2D" uid="uid://cu3fwlq67ohcc" path="res://Sprites/Dirt.png" id="2_e1kr5"]
+[ext_resource type="Script" uid="uid://b31hgwqkt4awy" path="res://Resources/tut_generator.gd" id="2_hl62s"]
+[ext_resource type="Texture2D" uid="uid://d0oq80gafeqn4" path="res://Sprites/Grass.png" id="3_3shck"]
+[ext_resource type="Texture2D" uid="uid://cceuwawmv8elb" path="res://Sprites/Sprite-six-sides.png" id="4_e1kr5"]
+
+[sub_resource type="VoxelStreamMemory" id="VoxelStreamMemory_7dm0k"]
+
+[sub_resource type="Resource" id="Resource_h2lqh"]
+script = ExtResource("1_h2lqh")
+id = 3
+height = 1
+metadata/_custom_type_script = "uid://bpvbw5shcm7ps"
+
+[sub_resource type="Resource" id="Resource_hl62s"]
+script = ExtResource("1_h2lqh")
+id = 2
+height = 1
+metadata/_custom_type_script = "uid://bpvbw5shcm7ps"
+
+[sub_resource type="Resource" id="Resource_xo2vs"]
+script = ExtResource("1_h2lqh")
+id = 1
+height = 2
+metadata/_custom_type_script = "uid://bpvbw5shcm7ps"
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_xo2vs"]
+
+[sub_resource type="VoxelGeneratorScript" id="VoxelGeneratorScript_1q4c8"]
+script = ExtResource("2_hl62s")
+noise = SubResource("FastNoiseLite_xo2vs")
+max_height = 128
+spikiness = 3.0
+layers = Array[ExtResource("1_h2lqh")]([SubResource("Resource_h2lqh"), SubResource("Resource_hl62s"), SubResource("Resource_xo2vs")])
+metadata/_custom_type_script = "uid://b31hgwqkt4awy"
+
+[sub_resource type="VoxelBlockyModelEmpty" id="VoxelBlockyModelEmpty_avahw"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_h2lqh"]
+albedo_texture = ExtResource("1_iqhxt")
+texture_filter = 0
+
+[sub_resource type="VoxelBlockyModelCube" id="VoxelBlockyModelCube_hl62s"]
+material_override_0 = SubResource("StandardMaterial3D_h2lqh")
+atlas_size_in_tiles = Vector2i(3, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_xo2vs"]
+albedo_texture = ExtResource("2_e1kr5")
+texture_filter = 0
+
+[sub_resource type="VoxelBlockyModelCube" id="VoxelBlockyModelCube_1q4c8"]
+material_override_0 = SubResource("StandardMaterial3D_xo2vs")
+atlas_size_in_tiles = Vector2i(3, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_lg7om"]
+albedo_texture = ExtResource("3_3shck")
+texture_filter = 0
+
+[sub_resource type="VoxelBlockyModelCube" id="VoxelBlockyModelCube_0i68f"]
+material_override_0 = SubResource("StandardMaterial3D_lg7om")
+atlas_size_in_tiles = Vector2i(3, 2)
+tile_bottom = Vector2i(2, 1)
+tile_top = Vector2i(1, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3shck"]
+albedo_texture = ExtResource("4_e1kr5")
+texture_filter = 0
+
+[sub_resource type="VoxelBlockyModelCube" id="VoxelBlockyModelCube_h2lqh"]
+collision_aabbs = Array[AABB]([AABB(0, 0, 0, 1, 2, 1)])
+material_override_0 = SubResource("StandardMaterial3D_3shck")
+atlas_size_in_tiles = Vector2i(3, 2)
+tile_right = Vector2i(1, 0)
+tile_bottom = Vector2i(2, 0)
+tile_top = Vector2i(0, 1)
+tile_back = Vector2i(1, 1)
+tile_front = Vector2i(2, 1)
+
+[sub_resource type="VoxelBlockyLibrary" id="VoxelBlockyLibrary_e1kr5"]
+models = Array[VoxelBlockyModel]([SubResource("VoxelBlockyModelEmpty_avahw"), SubResource("VoxelBlockyModelCube_hl62s"), SubResource("VoxelBlockyModelCube_1q4c8"), SubResource("VoxelBlockyModelCube_0i68f"), SubResource("VoxelBlockyModelCube_h2lqh")])
+
+[sub_resource type="VoxelMesherBlocky" id="VoxelMesherBlocky_272bh"]
+library = SubResource("VoxelBlockyLibrary_e1kr5")
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_mqteh"]
+sky_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+ground_horizon_color = Color(0.66224277, 0.6717428, 0.6867428, 1)
+
+[sub_resource type="Sky" id="Sky_206su"]
+sky_material = SubResource("ProceduralSkyMaterial_mqteh")
+
+[sub_resource type="Environment" id="Environment_0u6kl"]
+background_mode = 2
+sky = SubResource("Sky_206su")
+tonemap_mode = 2
+glow_enabled = true
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_e1kr5"]
+transparency = 1
+albedo_color = Color(1, 1, 1, 0.5019608)
+texture_filter = 0
+
+[sub_resource type="BoxMesh" id="BoxMesh_3shck"]
+material = SubResource("StandardMaterial3D_e1kr5")
+
+[sub_resource type="LabelSettings" id="LabelSettings_e1kr5"]
+shadow_size = 4
+shadow_color = Color(0, 0, 0, 0.6862745)
+
+[node name="Terrain" type="VoxelTerrain" unique_id=91805390]
+stream = SubResource("VoxelStreamMemory_7dm0k")
+generator = SubResource("VoxelGeneratorScript_1q4c8")
+mesher = SubResource("VoxelMesherBlocky_272bh")
+max_view_distance = 64
+run_stream_in_editor = false
+script = ExtResource("2_avahw")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1318379791]
+environment = SubResource("Environment_0u6kl")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=1170035263]
+transform = Transform3D(-0.8660254, -0.43301278, 0.25, 0, 0.49999997, 0.86602545, -0.50000006, 0.75, -0.43301266, 0, 0, 0)
+shadow_enabled = true
+
+[node name="PlaceIndicator" type="MeshInstance3D" parent="." unique_id=505601016]
+mesh = SubResource("BoxMesh_3shck")
+
+[node name="Player" parent="." unique_id=1163231357 instance=ExtResource("2_0u6kl")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 64, 0)
+speed = 15.0
+jump_height = 4.0
+
+[node name="VoxelViewer" type="VoxelViewer" parent="Player" unique_id=159846105]
+transform = Transform3D(1, 0, 0, 0, 0.89879405, 0.43837115, 0, -0.43837115, 0.89879405, 0, 0, 0)
+
+[node name="UILayer" type="CanvasLayer" parent="Player" unique_id=567869341]
+
+[node name="Crosshair" type="ColorRect" parent="Player/UILayer" unique_id=458770299]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -2.5
+offset_top = -2.5
+offset_right = 2.5
+offset_bottom = 2.5
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 4
+mouse_filter = 2
+
+[node name="SelectedLabel" type="Label" parent="Player/UILayer" unique_id=640176448]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = -34.0
+offset_right = 55.0
+offset_bottom = -11.0
+grow_vertical = 0
+label_settings = SubResource("LabelSettings_e1kr5")
+
+[connection signal="break_pressed" from="Player" to="." method="_on_player_break_pressed"]
+[connection signal="hover_requested" from="Player" to="." method="_on_player_hover_requested"]
+[connection signal="place_pressed" from="Player" to="." method="_on_player_place_pressed"]
